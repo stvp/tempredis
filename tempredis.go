@@ -11,17 +11,28 @@ import (
 )
 
 var (
+	// The presence of this string in redis-server's stdout stream indicates that
+	// the server has successfully stood up.
 	RedisStartupSuccess = "The server is now ready to accept connections"
+
+	// Duration before returning a timeout error while waiting for redis-server
+	// to start.
 	RedisStartupTimeout = time.Second
 )
 
+// Server handles starting and stopping a single redis-server process.
 type Server struct {
 	Config Config
 	cmd    *exec.Cmd
 }
 
+// Config is a simple map of config keys to config values. These config values
+// will be fed to redis-server on startup.
 type Config map[string]string
 
+// Start will attempt to start and configure redis-server. If the startup fails
+// for any reason, an error will be returned and the redis-server process will
+// be stopped.
 func (s *Server) Start() (err error) {
 	var serverStdin io.WriteCloser
 	var serverStdout io.ReadCloser
@@ -60,6 +71,8 @@ func (s *Server) Start() (err error) {
 	return nil
 }
 
+// Stop sends a TERM signal to redis-server, if running. It returns an error if
+// redis-server isn't running or if redis-server fails to exit.
 func (s *Server) Stop() (err error) {
 	if s.cmd == nil {
 		return fmt.Errorf("redis-server is not running")

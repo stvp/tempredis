@@ -1,4 +1,4 @@
-package main
+package tempredis
 
 import (
 	"github.com/garyburd/redigo/redis"

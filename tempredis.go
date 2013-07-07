@@ -10,7 +10,6 @@ import (
 	"time"
 )
 
-
 var (
 	RedisStartupSuccess = "The server is now ready to accept connections"
 	RedisStartupTimeout = time.Second
@@ -23,44 +22,56 @@ type Server struct {
 
 type Config map[string]string
 
-func NewServer(config Config) (server *Server) {
-	return &Server{
-		Config: config,
-	}
-}
-
 func (s *Server) Start() (err error) {
+	var serverStdin io.WriteCloser
+	var serverStdout io.ReadCloser
+
 	if s.cmd != nil {
-		return fmt.Errorf("Already started")
+		return fmt.Errorf("redis-server has already been started")
 	}
+
+	// Build Cmd
 	s.cmd = exec.Command("redis-server", "-")
-	stdin, err := s.cmd.StdinPipe()
+	serverStdin, err = s.cmd.StdinPipe()
 	if err != nil {
+		s.cmd = nil
 		return err
 	}
-	stdout, err := s.cmd.StdoutPipe()
+	serverStdout, err = s.cmd.StdoutPipe()
 	if err != nil {
+		s.cmd = nil
 		return err
 	}
+
+	// Try starting and configuring redis-server
 	if err = s.cmd.Start(); err != nil {
-		return err
-	}
-	if err = s.writeConfig(stdin); err != nil {
-		return err
-	}
-	if err = s.waitForSuccessfulStartup(stdout); err != nil {
 		s.Stop()
 		return err
 	}
+	if err = s.writeConfig(serverStdin); err != nil {
+		s.Stop()
+		return err
+	}
+	if err = s.waitForSuccessfulStartup(serverStdout); err != nil {
+		s.Stop()
+		return err
+	}
+
 	return nil
 }
 
 func (s *Server) Stop() (err error) {
+	if s.cmd == nil {
+		return fmt.Errorf("redis-server is not running")
+	}
+
 	s.cmd.Process.Signal(syscall.SIGTERM)
 	_, err = s.cmd.Process.Wait()
 	if err != nil {
 		return err
 	}
+
+	s.cmd = nil
 	return nil
 }
 
@@ -85,7 +96,7 @@ func (s *Server) waitForSuccessfulStartup(r io.ReadCloser) (err error) {
 	go func() {
 		for {
 			select {
-			case <-stopWaiting:
+			case <-stopWaiting: // Timeout
 				return
 			default:
 				if scanner.Scan() {

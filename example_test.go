@@ -5,12 +5,12 @@ import (
 )
 
 func ExampleUsage() {
-	server := Server{
-		Config: Config{
+	server, err := Start(
+		Config{
 			"port":      "11001",
 			"databases": "8",
 		},
-	}
+	)
 	if err := server.Start(); err != nil {
 		panic(err)
 	}

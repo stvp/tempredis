@@ -30,6 +30,14 @@ type Server struct {
 // will be fed to redis-server on startup.
 type Config map[string]string
 
+// Start a new redis-server with the given config and return both the Server
+// and the Start() error, if any.
+func Start(config Config) (server *Server, err error) {
+	server = &Server{Config: config}
+	err = server.Start()
+	return server, err
+}
+
 // Start will attempt to start and configure redis-server. If the startup fails
 // for any reason, an error will be returned and the redis-server process will
 // be stopped.

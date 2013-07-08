@@ -18,13 +18,13 @@ import (
 )
 
 func main() {
-	server := tempredis.Server{
-		Config: tempredis.Config{
+	server, err := tempredis.Start(
+		tempredis.Config{
 			"port":      "11001",
 			"databases": "8",
 		},
-	}
-	if err := server.Start(); err != nil {
+	)
+	if err != nil {
 		panic(err)
 	}
 	defer server.Stop()

@@ -39,6 +39,38 @@ func main() {
 }
 ```
 
+Or, even easier:
+
+```go
+package main
+
+import (
+	"github.com/garyburd/redigo/redis"
+	"github.com/stvp/tempredis"
+)
+
+func main() {
+  config := tempredis.Config{
+    "port":      "11001",
+    "databases": "8",
+  }
+
+  tempredis.Temp(config, func(err error) {
+    if err != nil {
+      panic(err)
+    }
+
+    conn, err := redis.Dial("tcp", ":11001")
+    defer conn.Close()
+    if err != nil {
+      panic(err)
+    }
+
+    conn.Do("SET", "foo", "bar")
+  })
+}
+```
+
 Should I use this outside of testing?
 -------------------------------------
 

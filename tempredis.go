@@ -148,3 +148,12 @@ func (s *Server) waitForSuccessfulStartup(r io.ReadCloser) (err error) {
 		return fmt.Errorf("Timed-out waiting for redis-server to start up successfully. Last line received was: %s", line)
 	}
 }
+
+// Temp runs a server with the given Config for the duration of the
+// given function. If there is an error starting up the server, the
+// error will be passed to the given function.
+func Temp(config Config, fn func(err error)) {
+	server, err := Start(config)
+	defer server.Stop()
+	fn(err)
+}

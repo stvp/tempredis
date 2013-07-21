@@ -79,14 +79,14 @@ func (s *Server) Start() (err error) {
 	return nil
 }
 
-// Stop sends a TERM signal to redis-server, if running. It returns an error if
+// Stop sends a KILL signal to redis-server, if running. It returns an error if
 // redis-server isn't running or if redis-server fails to exit.
 func (s *Server) Stop() (err error) {
 	if s.cmd == nil {
 		return fmt.Errorf("redis-server is not running")
 	}
 
-	s.cmd.Process.Signal(syscall.SIGTERM)
+	s.cmd.Process.Signal(syscall.SIGKILL)
 	_, err = s.cmd.Process.Wait()
 	if err != nil {
 		return err

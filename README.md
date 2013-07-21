@@ -76,8 +76,3 @@ Should I use this outside of testing?
 
 No.
 
-TODO
-----
-
-* Add a timeout to `Server.Stop()` and send a more forceful kill signal.
-

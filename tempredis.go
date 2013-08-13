@@ -64,24 +64,41 @@ func (s *Server) Start() (err error) {
 
 	// Try starting and configuring redis-server
 	if err = s.cmd.Start(); err != nil {
-		s.Stop()
+		s.Term()
 		return err
 	}
 	if err = s.writeConfig(serverStdin); err != nil {
-		s.Stop()
+		s.Term()
 		return err
 	}
 	if err = s.waitForSuccessfulStartup(serverStdout); err != nil {
-		s.Stop()
+		s.Term()
 		return err
 	}
 
 	return nil
 }
 
-// Stop sends a KILL signal to redis-server, if running. It returns an error if
+// Term sends a TERM signal to redis-server, if running. It returns an error if
 // redis-server isn't running or if redis-server fails to exit.
-func (s *Server) Stop() (err error) {
+func (s *Server) Term() (err error) {
+	if s.cmd == nil {
+		return fmt.Errorf("redis-server is not running")
+	}
+
+	s.cmd.Process.Signal(syscall.SIGTERM)
+	_, err = s.cmd.Process.Wait()
+	if err != nil {
+		return err
+	}
+
+	s.cmd = nil
+	return nil
+}
+
+// Kill sends a KILL signal to redis-server, if running. It returns an error if
+// redis-server isn't running or if redis-server fails to exit.
+func (s *Server) Kill() (err error) {
 	if s.cmd == nil {
 		return fmt.Errorf("redis-server is not running")
 	}
@@ -154,6 +171,6 @@ func (s *Server) waitForSuccessfulStartup(r io.ReadCloser) (err error) {
 // error will be passed to the given function.
 func Temp(config Config, fn func(err error)) {
 	server, err := Start(config)
-	defer server.Stop()
+	defer server.Term()
 	fn(err)
 }

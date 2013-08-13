@@ -14,7 +14,7 @@ func ExampleUsage() {
 	if err := server.Start(); err != nil {
 		panic(err)
 	}
-	defer server.Stop()
+	defer server.Term()
 
 	conn, err := redis.Dial("tcp", ":11001")
 	defer conn.Close()

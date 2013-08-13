@@ -27,7 +27,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	defer server.Stop()
+	defer server.Term()
 
 	conn, err := redis.Dial("tcp", ":11001")
 	defer conn.Close()
@@ -69,6 +69,13 @@ func main() {
     conn.Do("SET", "foo", "bar")
   })
 }
+```
+
+If you don't care about normal shutdown behavior or want to simulate a crash,
+you can send a KILL signal to the server with:
+
+```go
+server.Kill()
 ```
 
 Should I use this outside of testing?

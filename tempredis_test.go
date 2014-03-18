@@ -5,6 +5,10 @@ import (
 	"testing"
 )
 
+const (
+	PORT = "7725"
+)
+
 func startServer(config Config) (*Server, error) {
 	server := &Server{Config: config}
 	err := server.Start()
@@ -14,12 +18,12 @@ func startServer(config Config) (*Server, error) {
 // -- Tests
 
 func TestRedisServerStartAndStop(t *testing.T) {
-	server, err := startServer(Config{"port": "11001", "databases": "3"})
+	server, err := startServer(Config{"port": PORT, "databases": "3"})
 	if err != nil {
 		t.Fatalf("Creating a server failed: %s", err.Error())
 	}
 
-	r, err := redis.Dial("tcp", ":11001")
+	r, err := redis.Dial("tcp", ":"+PORT)
 	defer r.Close()
 	if err != nil {
 		t.Fatalf("Couldn't connect to running server", err.Error())
@@ -41,7 +45,7 @@ func TestRedisServerStartAndStop(t *testing.T) {
 }
 
 func TestRedisServerTerm(t *testing.T) {
-	server := Server{Config: Config{"port": "11001"}}
+	server := Server{Config: Config{"port": PORT}}
 	if err := server.Term(); err == nil {
 		t.Fatal("Term() on a server that isn't running should fail")
 	}
@@ -54,14 +58,14 @@ func TestRedisServerTerm(t *testing.T) {
 		t.Fatalf("Failed to TERM server: %s", err.Error())
 	}
 
-	_, err = redis.Dial("tcp", ":11001")
+	_, err = redis.Dial("tcp", ":"+PORT)
 	if err == nil {
 		t.Fatal("Server is running, but it shouldn't be")
 	}
 }
 
 func TestRedisServerKill(t *testing.T) {
-	server := Server{Config: Config{"port": "11001"}}
+	server := Server{Config: Config{"port": PORT}}
 	if err := server.Kill(); err == nil {
 		t.Fatal("Kill() on a server that isn't running should fail")
 	}
@@ -72,7 +76,7 @@ func TestRedisServerKill(t *testing.T) {
 	}
 
 	// Block server with sleep
-	r, err := redis.Dial("tcp", ":11001")
+	r, err := redis.Dial("tcp", ":"+PORT)
 	defer r.Close()
 	if err != nil {
 		t.Fatalf("Couldn't connect to running server", err.Error())
@@ -83,20 +87,20 @@ func TestRedisServerKill(t *testing.T) {
 		t.Fatalf("Failed to KILL server: %s", err.Error())
 	}
 
-	_, err = redis.Dial("tcp", ":11001")
+	_, err = redis.Dial("tcp", ":"+PORT)
 	if err == nil {
 		t.Fatal("Server is running, but it shouldn't be")
 	}
 }
 
 func TestRedisServerStartFailure(t *testing.T) {
-	s, err := startServer(Config{"port": "11001"})
+	s, err := startServer(Config{"port": PORT})
 	defer s.Term()
 	if err != nil {
 		t.Fatalf("Creating a server failed: %s", err.Error())
 	}
 
-	server, err := startServer(Config{"port": "11001"})
+	server, err := startServer(Config{"port": PORT})
 	defer server.Term()
 	if err == nil {
 		t.Fatal("Exptected server to fail starting (port in use), but it didn't")

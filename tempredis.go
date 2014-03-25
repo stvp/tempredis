@@ -30,6 +30,20 @@ type Server struct {
 // will be fed to redis-server on startup.
 type Config map[string]string
 
+// Address returns the dial-able address for a Redis server configured with
+// this Config struct.
+func (c Config) Address() string {
+	bind, ok := c["bind"]
+	if !ok {
+		bind = "0.0.0.0"
+	}
+	port, ok := c["port"]
+	if !ok {
+		port = "6379"
+	}
+	return bind + ":" + port
+}
+
 // Start a new redis-server with the given config and return both the Server
 // and the Start() error, if any.
 func Start(config Config) (server *Server, err error) {

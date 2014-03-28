@@ -33,15 +33,27 @@ type Config map[string]string
 // Address returns the dial-able address for a Redis server configured with
 // this Config struct.
 func (c Config) Address() string {
+	return c.Bind() + ":" + c.Port()
+}
+
+// Bind returns the local bind interface for a Redis server configured with
+// this Config struct.
+func (c Config) Bind() string {
 	bind, ok := c["bind"]
 	if !ok {
 		bind = "0.0.0.0"
 	}
+	return bind
+}
+
+// Port returns the local port for a Redis server configured with this Config
+// struct.
+func (c Config) Port() string {
 	port, ok := c["port"]
 	if !ok {
 		port = "6379"
 	}
-	return bind + ":" + port
+	return port
 }
 
 // Start a new redis-server with the given config and return both the Server

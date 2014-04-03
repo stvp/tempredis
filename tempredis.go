@@ -56,6 +56,13 @@ func (c Config) Port() string {
 	return port
 }
 
+// Password returns the required password for a Redis server configured with
+// this Config struct.  If the server doesn't require authentication, an empty
+// string will be returned.
+func (c Config) Password() string {
+	return c["requirepass"]
+}
+
 // Start a new redis-server with the given config and return both the Server
 // and the Start() error, if any.
 func Start(config Config) (server *Server, err error) {

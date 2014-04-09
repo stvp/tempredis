@@ -97,7 +97,6 @@ func (s *Server) Start() (err error) {
 
 	// Try starting and configuring redis-server
 	if err = s.cmd.Start(); err != nil {
-		s.Term()
 		return err
 	}
 	if err = s.writeConfig(serverStdin); err != nil {

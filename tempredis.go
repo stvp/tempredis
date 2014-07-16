@@ -2,6 +2,7 @@ package tempredis
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"io"
 	"os/exec"
@@ -16,13 +17,17 @@ var (
 	RedisStartupSuccess = "The server is now ready to accept connections"
 
 	// Duration before returning a timeout error while waiting for redis-server
-	// to start.
+	// to start. You'll want to lengthen this significantly if you are loading a
+	// large backup from disk.
 	RedisStartupTimeout = time.Second
 )
 
-// Server handles starting and stopping a single redis-server process.
+// Server encapsulates the starting, configuration, and stopping a single
+// redis-server process.
 type Server struct {
 	Config Config
+	Stdout io.Reader
+	Stderr io.Reader
 	cmd    *exec.Cmd
 }
 
@@ -75,35 +80,42 @@ func Start(config Config) (server *Server, err error) {
 // for any reason, an error will be returned and the redis-server process will
 // be stopped.
 func (s *Server) Start() (err error) {
-	var serverStdin io.WriteCloser
-	var serverStdout io.ReadCloser
-
 	if s.cmd != nil {
 		return fmt.Errorf("redis-server has already been started")
 	}
 
-	// Build Cmd
 	s.cmd = exec.Command("redis-server", "-")
-	serverStdin, err = s.cmd.StdinPipe()
+
+	stdin, err := s.cmd.StdinPipe()
 	if err != nil {
-		s.cmd = nil
 		return err
 	}
-	serverStdout, err = s.cmd.StdoutPipe()
+	stdout, err := s.cmd.StdoutPipe()
 	if err != nil {
-		s.cmd = nil
+		return err
+	}
+	stderr, err := s.cmd.StderrPipe()
+	if err != nil {
 		return err
 	}
 
-	// Try starting and configuring redis-server
+	// Hook up Stdout and Stderr readers
+	stdoutCopy := new(bytes.Buffer)
+	s.Stdout = stdoutCopy
+	stdout = TeeReadCloser(stdout, stdoutCopy)
+	s.Stderr = stderr
+
+	// Start server and write config
 	if err = s.cmd.Start(); err != nil {
 		return err
 	}
-	if err = s.writeConfig(serverStdin); err != nil {
+	if err = writeConfig(s.Config, stdin); err != nil {
 		s.Term()
 		return err
 	}
-	if err = s.waitForSuccessfulStartup(serverStdout); err != nil {
+
+	// Wait until Redis can accept connections
+	if err = waitForSuccessfulStartup(stdout); err != nil {
 		s.Term()
 		return err
 	}
@@ -145,8 +157,8 @@ func (s *Server) Kill() (err error) {
 	return nil
 }
 
-func (s *Server) writeConfig(w io.WriteCloser) (err error) {
-	for key, value := range s.Config {
+func writeConfig(config Config, w io.WriteCloser) (err error) {
+	for key, value := range config {
 		_, err = fmt.Fprintf(w, "%s %s\n", key, value)
 		if err != nil {
 			return err
@@ -155,7 +167,7 @@ func (s *Server) writeConfig(w io.WriteCloser) (err error) {
 	return w.Close()
 }
 
-func (s *Server) waitForSuccessfulStartup(r io.ReadCloser) (err error) {
+func waitForSuccessfulStartup(r io.Reader) (err error) {
 	scanner := bufio.NewScanner(r)
 	line := ""
 

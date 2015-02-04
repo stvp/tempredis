@@ -123,8 +123,9 @@ func (s *Server) Start() (err error) {
 	return nil
 }
 
-// Term sends a TERM signal to redis-server, if running. It returns an error if
-// redis-server isn't running or if redis-server fails to exit.
+// Term sends a TERM signal to redis-server, which triggers a graceful
+// shutdown. It returns an error if redis-server isn't running or if
+// redis-server fails to exit.
 func (s *Server) Term() (err error) {
 	if s.cmd == nil {
 		return fmt.Errorf("redis-server is not running")
@@ -140,8 +141,9 @@ func (s *Server) Term() (err error) {
 	return nil
 }
 
-// Kill sends a KILL signal to redis-server, if running. It returns an error if
-// redis-server isn't running or if redis-server fails to exit.
+// Kill sends a KILL signal to redis-server, which triggers an immediate,
+// non-graceful shutdown of redis-server. It returns an error if redis-server
+// isn't running or if redis-server fails to exit.
 func (s *Server) Kill() (err error) {
 	if s.cmd == nil {
 		return fmt.Errorf("redis-server is not running")

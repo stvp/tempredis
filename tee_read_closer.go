@@ -4,12 +4,12 @@ import (
 	"io"
 )
 
-// TeeReadCloser is a copy of io.TeeReader, except that it accepts and returns
-// an io.ReadCloser instead of io.Reader objects.
-func TeeReadCloser(r io.ReadCloser, w io.Writer) io.ReadCloser {
+func trc(r io.ReadCloser, w io.Writer) io.ReadCloser {
 	return &teeReadCloser{r, w}
 }
 
+// teeReadCloser is a copy of io.TeeReader, except that it accepts and returns
+// an io.ReadCloser instead of io.Reader objects.
 type teeReadCloser struct {
 	r io.ReadCloser
 	w io.Writer

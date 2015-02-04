@@ -102,7 +102,7 @@ func (s *Server) Start() (err error) {
 	// Hook up Stdout and Stderr readers
 	stdoutCopy := new(bytes.Buffer)
 	s.Stdout = stdoutCopy
-	stdout = TeeReadCloser(stdout, stdoutCopy)
+	stdout = trc(stdout, stdoutCopy)
 	s.Stderr = stderr
 
 	// Start server and write config

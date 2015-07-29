@@ -11,7 +11,7 @@ func ExampleUsage() {
 			"databases": "8",
 		},
 	)
-	if err := server.Start(); err != nil {
+	if err != nil {
 		panic(err)
 	}
 	defer server.Term()

@@ -25,9 +25,9 @@ func (c Config) Host() string {
 func (c Config) URL() string {
 	password := c.Password()
 	if len(password) == 0 {
-		return fmt.Sprintf("redis://%s", c.Host())
+		return fmt.Sprintf("redis://%s/", c.Host())
 	} else {
-		return fmt.Sprintf("redis://:%s@%s", password, c.Host())
+		return fmt.Sprintf("redis://:%s@%s/", password, c.Host())
 	}
 }
 

@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"net"
 	"os/exec"
+	"strconv"
 	"strings"
 	"syscall"
 )
@@ -29,6 +31,7 @@ const (
 // redis-server process.
 type Server struct {
 	Config    Config
+	Host      string
 	cmd       *exec.Cmd
 	stdout    io.Reader
 	stdoutBuf bytes.Buffer
@@ -38,7 +41,15 @@ type Server struct {
 // Start starts a redis-server process with the given config and returns a
 // Server object. If the server failed to start, Start will return an error.
 func Start(config Config) (server *Server, err error) {
-	server = &Server{Config: config}
+	port, ok := config["port"]
+	if !ok {
+		port = ephemeralPort()
+		config["port"] = port
+	}
+	server = &Server{
+		Config: config,
+		Host:   fmt.Sprintf("0.0.0.0:%s", port),
+	}
 	err = server.start()
 	return server, err
 }
@@ -122,4 +133,20 @@ func (s *Server) signal(sig syscall.Signal) error {
 	s.cmd.Process.Signal(sig)
 	_, err := s.cmd.Process.Wait()
 	return err
+}
+
+// ephemeralPort returns a local ephemeral TCP port that we can bind to.
+func ephemeralPort() string {
+	addr, err := net.ResolveTCPAddr("tcp", "localhost:0")
+	if err != nil {
+		panic(err)
+	}
+
+	listener, err := net.ListenTCP("tcp", addr)
+	if err != nil {
+		panic(err)
+	}
+	listener.Close()
+
+	return strconv.Itoa(listener.Addr().(*net.TCPAddr).Port)
 }

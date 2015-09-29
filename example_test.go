@@ -7,7 +7,6 @@ import (
 func ExampleUsage() {
 	server, err := Start(
 		Config{
-			"port":      PORT,
 			"databases": "8",
 		},
 	)
@@ -16,7 +15,7 @@ func ExampleUsage() {
 	}
 	defer server.Term()
 
-	conn, err := redis.Dial("tcp", ":"+PORT)
+	conn, err := redis.Dial("tcp", server.Host)
 	defer conn.Close()
 	if err != nil {
 		panic(err)

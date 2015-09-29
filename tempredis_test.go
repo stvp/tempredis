@@ -7,12 +7,8 @@ import (
 	"github.com/garyburd/redigo/redis"
 )
 
-const (
-	PORT = "7725"
-)
-
 func TestServer(t *testing.T) {
-	server, err := Start(Config{"port": PORT, "databases": "3"})
+	server, err := Start(Config{"databases": "3"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -23,7 +19,7 @@ func TestServer(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	r, err := redis.Dial("tcp", ":"+PORT)
+	r, err := redis.Dial("tcp", server.Host)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -59,7 +55,7 @@ func TestWaitForStdoutFail(t *testing.T) {
 }
 
 func TestRDBLoaded(t *testing.T) {
-	server, err := Start(Config{"port": PORT, "dbfilename": "_dump.rdb"})
+	server, err := Start(Config{"dbfilename": "_dump.rdb"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -72,7 +68,7 @@ func TestRDBLoaded(t *testing.T) {
 }
 
 func TestAOFLoaded(t *testing.T) {
-	server, err := Start(Config{"port": PORT, "appendonly": "yes", "appendfilename": "_appendonly.aof"})
+	server, err := Start(Config{"appendonly": "yes", "appendfilename": "_appendonly.aof"})
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -5,15 +5,13 @@ import (
 )
 
 func ExampleUsage() {
-	server, err := Start(
-		Config{
-			"databases": "8",
-		},
-	)
+	server, err := Start(Config{"databases": "8"})
 	if err != nil {
 		panic(err)
 	}
 	defer server.Term()
+
+	server.WaitFor(Ready)
 
 	conn, err := redis.Dial("tcp", server.Config.Host())
 	defer conn.Close()

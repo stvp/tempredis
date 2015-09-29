@@ -2,12 +2,11 @@ package tempredis
 
 import "fmt"
 
-// Config is a simple map of config keys to config values. These config values
-// will be fed to redis-server on startup.
+// Config is a key-value map of Redis config settings.
 type Config map[string]string
 
-// Address returns the dial-able address for a Redis server configured with
-// this Config struct.
+// Host returns the host for a Redis server configured with this Config as
+// "host:port".
 func (c Config) Host() string {
 	bind, ok := c["bind"]
 	if !ok {
@@ -32,9 +31,9 @@ func (c Config) URL() string {
 	}
 }
 
-// Password returns the required password for a Redis server configured with
-// this Config struct.  If the server doesn't require authentication, an empty
-// string will be returned.
+// Password returns the password for a Redis server configured with this
+// Config. If the server doesn't require authentication, an empty string will
+// be returned.
 func (c Config) Password() string {
 	return c["requirepass"]
 }

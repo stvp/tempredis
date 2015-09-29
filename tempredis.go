@@ -40,6 +40,9 @@ type Server struct {
 // Start starts a redis-server process with the given config and returns a
 // Server object. If the server failed to start, Start will return an error.
 func Start(config Config) (server *Server, err error) {
+	if config == nil {
+		config = Config{}
+	}
 	port, ok := config["port"]
 	if !ok {
 		port = ephemeralPort()

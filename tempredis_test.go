@@ -41,6 +41,30 @@ func TestServer(t *testing.T) {
 	}
 }
 
+func TestStartWithDefaultConfig(t *testing.T) {
+	server, err := Start(nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer server.Kill()
+
+	err = server.WaitFor(Ready)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	r, err := redis.Dial("tcp", server.Config.Host())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer r.Close()
+
+	_, err = r.Do("PING")
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestWaitForStdoutFail(t *testing.T) {
 	server, err := Start(Config{"oops": "borked"})
 	if err != nil {

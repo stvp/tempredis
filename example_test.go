@@ -15,7 +15,7 @@ func ExampleUsage() {
 	}
 	defer server.Term()
 
-	conn, err := redis.Dial("tcp", server.Host)
+	conn, err := redis.Dial("tcp", server.Config.Host())
 	defer conn.Close()
 	if err != nil {
 		panic(err)

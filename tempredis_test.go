@@ -19,7 +19,7 @@ func TestServer(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	r, err := redis.Dial("tcp", server.Host)
+	r, err := redis.Dial("tcp", server.Config.Host())
 	if err != nil {
 		t.Fatal(err)
 	}

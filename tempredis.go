@@ -31,7 +31,6 @@ const (
 // redis-server process.
 type Server struct {
 	Config    Config
-	Host      string
 	cmd       *exec.Cmd
 	stdout    io.Reader
 	stdoutBuf bytes.Buffer
@@ -46,10 +45,7 @@ func Start(config Config) (server *Server, err error) {
 		port = ephemeralPort()
 		config["port"] = port
 	}
-	server = &Server{
-		Config: config,
-		Host:   fmt.Sprintf("0.0.0.0:%s", port),
-	}
+	server = &Server{Config: config}
 	err = server.start()
 	return server, err
 }

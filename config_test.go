@@ -7,7 +7,7 @@ type urlTestcase struct {
 	url    string
 }
 
-func TestConfigAddress(t *testing.T) {
+func TestConfig_URL(t *testing.T) {
 	tests := []urlTestcase{
 		{
 			Config{},

@@ -7,6 +7,44 @@ import (
 	"github.com/garyburd/redigo/redis"
 )
 
+func BenchmarkStart(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		server, err := Start(nil)
+		if err != nil {
+			b.Fatal(err)
+		}
+
+		err = server.WaitFor(Ready)
+		if err != nil {
+			b.Fatal(err)
+		}
+
+		server.Kill()
+	}
+}
+
+func BenchmarkStartAndConnect(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		server, err := Start(nil)
+		if err != nil {
+			b.Fatal(err)
+		}
+
+		err = server.WaitFor(Ready)
+		if err != nil {
+			b.Fatal(err)
+		}
+
+		r, err := redis.DialURL(server.Config.URL().String())
+		if err != nil {
+			b.Fatal(err)
+		}
+
+		r.Close()
+		server.Kill()
+	}
+}
+
 func TestServer(t *testing.T) {
 	server, err := Start(Config{"databases": "3"})
 	if err != nil {

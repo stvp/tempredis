@@ -19,7 +19,7 @@ func TestServer(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	r, err := redis.DialURL(server.Config.URL().String())
+	r, err := redis.DialURL(server.URL().String())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -53,7 +53,7 @@ func TestStartWithDefaultConfig(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	r, err := redis.DialURL(server.Config.URL().String())
+	r, err := redis.DialURL(server.URL().String())
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -7,6 +7,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net"
+	"net/url"
 	"os/exec"
 	"strconv"
 	"strings"
@@ -30,7 +31,7 @@ const (
 // Server encapsulates the starting, configuration, and stopping of a single
 // redis-server process.
 type Server struct {
-	Config    Config
+	config    Config
 	cmd       *exec.Cmd
 	stdout    io.Reader
 	stdoutBuf bytes.Buffer
@@ -48,9 +49,14 @@ func Start(config Config) (server *Server, err error) {
 		port = ephemeralPort()
 		config["port"] = port
 	}
-	server = &Server{Config: config}
+	server = &Server{config: config}
 	err = server.start()
 	return server, err
+}
+
+// URL returns the dial-able URL for this Redis server process.
+func (s *Server) URL() *url.URL {
+	return s.config.URL()
 }
 
 // Stdout blocks until redis-server returns and then returns the full stdout.
@@ -109,7 +115,7 @@ func (s *Server) start() (err error) {
 
 	err = s.cmd.Start()
 	if err == nil {
-		err = writeConfig(s.Config, stdin)
+		err = writeConfig(s.config, stdin)
 	}
 
 	return err

@@ -13,7 +13,7 @@ func ExampleUsage() {
 
 	server.WaitFor(Ready)
 
-	conn, err := redis.DialURL(server.Config.URL().String())
+	conn, err := redis.DialURL(server.URL().String())
 	defer conn.Close()
 	if err != nil {
 		panic(err)

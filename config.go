@@ -5,6 +5,11 @@ import (
 	"net/url"
 )
 
+const (
+	defaultBind = "0.0.0.0"
+	defaultPort = "6379"
+)
+
 // Config is a key-value map of Redis config settings.
 type Config map[string]string
 
@@ -13,14 +18,12 @@ type Config map[string]string
 func (c Config) URL() (redisURL *url.URL) {
 	bind, ok := c["bind"]
 	if !ok {
-		// Redis' default bind
-		bind = "0.0.0.0"
+		bind = defaultBind
 	}
 
 	port, ok := c["port"]
 	if !ok {
-		// Redis' default port
-		port = "6379"
+		port = defaultPort
 	}
 
 	redisURL = &url.URL{

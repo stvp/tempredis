@@ -1,7 +1,6 @@
 package tempredis
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/garyburd/redigo/redis"
@@ -13,11 +12,6 @@ func TestServer(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer server.Kill()
-
-	err = server.WaitFor(Ready)
-	if err != nil {
-		t.Fatal(err)
-	}
 
 	r, err := redis.DialURL(server.URL().String())
 	if err != nil {
@@ -48,11 +42,6 @@ func TestStartWithDefaultConfig(t *testing.T) {
 	}
 	defer server.Kill()
 
-	err = server.WaitFor(Ready)
-	if err != nil {
-		t.Fatal(err)
-	}
-
 	r, err := redis.DialURL(server.URL().String())
 	if err != nil {
 		t.Fatal(err)
@@ -65,41 +54,10 @@ func TestStartWithDefaultConfig(t *testing.T) {
 	}
 }
 
-func TestWaitForStdoutFail(t *testing.T) {
+func TestStartFail(t *testing.T) {
 	server, err := Start(Config{"oops": "borked"})
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer server.Kill()
-
-	err = server.WaitFor(Ready)
 	if err == nil {
-		t.Fatal(err)
-	}
-}
-
-func TestRDBLoaded(t *testing.T) {
-	server, err := Start(Config{"dbfilename": "_dump.rdb"})
-	if err != nil {
-		t.Fatal(err)
+		t.Fatal("expected error, got nil")
 	}
 	defer server.Kill()
-
-	err = server.WaitFor(RDBLoaded)
-	if err != nil {
-		fmt.Println(err)
-	}
-}
-
-func TestAOFLoaded(t *testing.T) {
-	server, err := Start(Config{"appendonly": "yes", "appendfilename": "_appendonly.aof"})
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer server.Kill()
-
-	err = server.WaitFor(AOFLoaded)
-	if err != nil {
-		fmt.Println(err)
-	}
 }

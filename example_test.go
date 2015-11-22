@@ -11,8 +11,6 @@ func ExampleUsage() {
 	}
 	defer server.Term()
 
-	server.WaitFor(Ready)
-
 	conn, err := redis.DialURL(server.URL().String())
 	defer conn.Close()
 	if err != nil {

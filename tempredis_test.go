@@ -13,7 +13,7 @@ func TestServer(t *testing.T) {
 	}
 	defer server.Kill()
 
-	r, err := redis.DialURL(server.URL().String())
+	r, err := redis.Dial("unix", server.Socket())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -42,7 +42,7 @@ func TestStartWithDefaultConfig(t *testing.T) {
 	}
 	defer server.Kill()
 
-	r, err := redis.DialURL(server.URL().String())
+	r, err := redis.Dial("unix", server.Socket())
 	if err != nil {
 		t.Fatal(err)
 	}

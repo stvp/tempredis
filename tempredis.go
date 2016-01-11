@@ -6,10 +6,8 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"net"
-	"net/url"
+	"os"
 	"os/exec"
-	"strconv"
 	"strings"
 	"syscall"
 )
@@ -21,8 +19,9 @@ const (
 )
 
 // Server encapsulates the configuration, starting, and stopping of a single
-// redis-server process.
+// redis-server process that is reachable via a local Unix socket.
 type Server struct {
+	dir       string
 	config    Config
 	cmd       *exec.Cmd
 	stdout    io.Reader
@@ -31,25 +30,26 @@ type Server struct {
 }
 
 // Start initiates a new redis-server process configured with the given
-// configuration. If "port" is not specified in the config, redis-server will
-// bind to a free port. If config is nil, redis-server will use the default
-// config and bind to a free port. An error is returned if redis-server is
-// unable to successfully start for any reason.
+// configuration. redis-server will listen on a temporary local Unix socket. An
+// error is returned if redis-server is unable to successfully start for any
+// reason.
 func Start(config Config) (server *Server, err error) {
 	if config == nil {
 		config = Config{}
 	}
 
-	port, ok := config["port"]
-	if !ok {
-		port, err = ephemeralPort()
-		if err != nil {
-			return nil, err
-		}
-		config["port"] = port
+	dir, err := ioutil.TempDir(os.TempDir(), "tempredis")
+	if err != nil {
+		return nil, err
 	}
 
-	server = &Server{config: config}
+	config["unixsocket"] = fmt.Sprintf("%s/%s", dir, "redis.sock")
+	config["port"] = "0"
+
+	server = &Server{
+		dir:    dir,
+		config: config,
+	}
 	err = server.start()
 	if err != nil {
 		return server, err
@@ -112,9 +112,9 @@ func (s *Server) waitFor(search string) (err error) {
 	return err
 }
 
-// URL returns a dial-able URL for this Redis server process.
-func (s *Server) URL() *url.URL {
-	return s.config.URL()
+// Socket returns the full path to the local redis-server Unix socket.
+func (s *Server) Socket() string {
+	return s.config.Socket()
 }
 
 // Stdout blocks until redis-server returns and then returns the full stdout
@@ -134,33 +134,18 @@ func (s *Server) Stderr() string {
 // Term gracefully shuts down redis-server. It returns an error if redis-server
 // fails to terminate.
 func (s *Server) Term() (err error) {
-	return s.signal(syscall.SIGTERM)
+	return s.signalAndCleanup(syscall.SIGTERM)
 }
 
 // Kill forcefully shuts down redis-server. It returns an error if redis-server
 // fails to die.
-func (s *Server) Kill() error {
-	return s.signal(syscall.SIGKILL)
+func (s *Server) Kill() (err error) {
+	return s.signalAndCleanup(syscall.SIGKILL)
 }
 
-func (s *Server) signal(sig syscall.Signal) error {
+func (s *Server) signalAndCleanup(sig syscall.Signal) error {
 	s.cmd.Process.Signal(sig)
 	_, err := s.cmd.Process.Wait()
+	os.RemoveAll(s.dir)
 	return err
-}
-
-// ephemeralPort returns a local ephemeral TCP port that we can bind to.
-func ephemeralPort() (port string, err error) {
-	addr, err := net.ResolveTCPAddr("tcp", "localhost:0")
-	if err != nil {
-		return "", err
-	}
-
-	listener, err := net.ListenTCP("tcp", addr)
-	if err != nil {
-		return "", err
-	}
-
-	listener.Close()
-	return strconv.Itoa(listener.Addr().(*net.TCPAddr).Port), nil
 }

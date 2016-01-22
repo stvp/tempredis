@@ -43,8 +43,12 @@ func Start(config Config) (server *Server, err error) {
 		return nil, err
 	}
 
-	config["unixsocket"] = fmt.Sprintf("%s/%s", dir, "redis.sock")
-	config["port"] = "0"
+	if _, ok := config["unixsocket"]; !ok {
+		config["unixsocket"] = fmt.Sprintf("%s/%s", dir, "redis.sock")
+	}
+	if _, ok := config["port"]; !ok {
+		config["port"] = "0"
+	}
 
 	server = &Server{
 		dir:    dir,

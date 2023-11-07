@@ -12,15 +12,6 @@ import (
 	"syscall"
 )
 
-var (
-	// ready is the string redis-server prints to stdout after starting
-	// successfully.
-	ready = []string{
-		"The server is now ready to accept connections",
-		"Ready to accept connections",
-	}
-)
-
 // Server encapsulates the configuration, starting, and stopping of a single
 // redis-server process that is reachable via a local Unix socket.
 type Server struct {
@@ -63,7 +54,7 @@ func Start(config Config) (server *Server, err error) {
 	}
 
 	// Block until Redis is ready to accept connections.
-	err = server.waitFor(ready)
+	err = server.waitFor()
 
 	return server, err
 }
@@ -100,15 +91,24 @@ func writeConfig(config Config, w io.WriteCloser) (err error) {
 	return w.Close()
 }
 
-// waitFor blocks until redis-server prints the given string to stdout.
-func (s *Server) waitFor(search []string) (err error) {
+var (
+	// ready is the string redis-server prints to stdout after starting
+	// successfully.
+	ready = []string{
+		"The server is now ready to accept connections",
+		"Ready to accept connections",
+	}
+)
+
+// waitFor blocks until redis-server is ready
+func (s *Server) waitFor() (err error) {
 	var line string
 
 	scanner := bufio.NewScanner(s.stdout)
 	for scanner.Scan() {
 		line = scanner.Text()
 		fmt.Fprintf(&s.stdoutBuf, "%s\n", line)
-		for _, s := range search {
+		for _, s := range ready {
 			if strings.Contains(line, s) {
 				return nil
 			}

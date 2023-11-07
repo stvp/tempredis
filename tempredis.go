@@ -10,6 +10,7 @@ import (
 	"os/exec"
 	"strings"
 	"syscall"
+	"time"
 )
 
 // Server encapsulates the configuration, starting, and stopping of a single
@@ -52,11 +53,11 @@ func Start(config Config) (server *Server, err error) {
 	if err != nil {
 		return server, err
 	}
-
-	// Block until Redis is ready to accept connections.
-	err = server.waitFor()
-
-	return server, err
+	err = server.ready()
+	if err != nil {
+		return server, err
+	}
+	return server, nil
 }
 
 func (s *Server) start() (err error) {
@@ -89,6 +90,21 @@ func writeConfig(config Config, w io.WriteCloser) (err error) {
 		}
 	}
 	return w.Close()
+}
+
+func (s *Server) ready() (err error) {
+	c := make(chan error, 1)
+	go func() {
+		// Block until Redis is ready to accept connections.
+		c <- s.waitFor()
+	}()
+
+	select {
+	case err := <-c:
+		return err
+	case <-time.After(1 * time.Second):
+		return fmt.Errorf("timed out awaiting startup")
+	}
 }
 
 var (
